@@ -23,6 +23,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+app.UseStaticFiles();
 app.UseCors();
 app.UseHttpsRedirection();
 
