@@ -1,7 +1,10 @@
 ﻿using ECommerceAPI.Application.DTOs.Product;
 using ECommerceAPI.Application.Repositories;
 using ECommerceAPI.Domain.Entities;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Net;
 
 namespace ECommerce.Api.Controllers
@@ -22,12 +25,24 @@ namespace ECommerce.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
-            return Ok(_productReadRepository.GetByIdAsync(id, false));
+            return Ok(await _productReadRepository.GetByIdAsync(id, false));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(CreateProductDto model)
+        public async Task<IActionResult> Post(CreateProductDto model, [FromServices] IValidator<CreateProductDto> validator)
         {
+            var validationResult = await validator.ValidateAsync(model);
+            
+            if (!validationResult.IsValid)
+            {
+                var modelStateDictionary = new ModelStateDictionary();
+
+                foreach (ValidationFailure failure in validationResult.Errors)
+                    modelStateDictionary.AddModelError(failure.PropertyName, failure.ErrorMessage);
+
+                return ValidationProblem(modelStateDictionary);
+            }
+
             await _productWriteRepository.AddAsync(new()
             {
                 Name = model.Name,
