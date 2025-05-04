@@ -7,6 +7,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace ECommerce.Api.Controllers
@@ -97,19 +98,50 @@ namespace ECommerce.Api.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> Upload()
+        public async Task<IActionResult> Upload(string id)
         {
-            var datas = await _storageService.UploadAsync("resource/files", Request.Form.Files);
+            var datas = await _storageService.UploadAsync("resource/product-images", Request.Form.Files);
+            Product product = await _productReadRepository.GetByIdAsync(id);
 
             List<ProductImageFile> productImageFiles = datas.Select(d => new ProductImageFile()
             {
                 FileName = d.fileName,
                 Path = d.pathOrContainerName,
-                Storage = _storageService.StorageName
+                Storage = _storageService.StorageName,
+                Products = new List<Product>() { product }
             }).ToList();
 
             await _productImageFileWriteRepository.AddRangeAsync(productImageFiles);
             await _productImageFileWriteRepository.SaveAsync();
+
+            return Ok();
+        }
+
+        [HttpGet("[action]/{id}")]
+        public async Task<IActionResult> GetProductImages(string id)
+        {
+            Product? product = await _productReadRepository.Table
+                .Include(p => p.ProductImageFiles)
+                .FirstOrDefaultAsync(p => p.Id == Guid.Parse(id));
+
+            return Ok(product.ProductImageFiles.Select(p => new
+            {
+                p.Path,
+                p.FileName,
+                p.Id
+            }));
+        }
+
+        [HttpDelete("[action]/{productId}/{imageId}")]
+        public async Task<IActionResult> DeleteProductImage(string productId, string imageId)
+        {
+            Product? product = await _productReadRepository.Table
+                .Include(p => p.ProductImageFiles)
+                .FirstOrDefaultAsync(p => p.Id == Guid.Parse(productId));
+            ProductImageFile? productImageFile = product.ProductImageFiles.FirstOrDefault(pi => pi.Id == Guid.Parse(imageId));
+            
+            product.ProductImageFiles.Remove(productImageFile);
+            await _productWriteRepository.SaveAsync();
 
             return Ok();
         }
