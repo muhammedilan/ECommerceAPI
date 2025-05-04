@@ -1,10 +1,12 @@
 ﻿using ECommerceAPI.Application.Abstractions.Storage;
 using ECommerceAPI.Application.DTOs.Product;
+using ECommerceAPI.Application.Features.Commands.CreateProduct;
+using ECommerceAPI.Application.Features.Queries.GetAllProduct;
 using ECommerceAPI.Application.Repositories;
-using ECommerceAPI.Application.RequestParameters;
 using ECommerceAPI.Domain.Entities;
 using FluentValidation;
 using FluentValidation.Results;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -14,32 +16,21 @@ namespace ECommerce.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController(IProductWriteRepository _productWriteRepository, IProductReadRepository _productReadRepository, IStorageService _storageService, IProductImageFileWriteRepository _productImageFileWriteRepository) : ControllerBase
+    public class ProductsController(IProductWriteRepository _productWriteRepository, IProductReadRepository _productReadRepository, IStorageService _storageService, IProductImageFileWriteRepository _productImageFileWriteRepository, IMediator _mediator) : ControllerBase
     {
         private readonly IProductWriteRepository _productWriteRepository = _productWriteRepository;
         private readonly IProductReadRepository _productReadRepository = _productReadRepository;
         private readonly IProductImageFileWriteRepository _productImageFileWriteRepository = _productImageFileWriteRepository;
         private readonly IStorageService _storageService = _storageService;
 
-        [HttpGet]
-        public IActionResult Get([FromQuery] Pagination pagination)
-        {
-            var totalCount = _productReadRepository.GetAll(false).Count();
-            var products = _productReadRepository.GetAll(false).Skip(pagination.Page * pagination.Size).Take(pagination.Size).Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Stock,
-                p.Price,
-                p.CreatedDate,
-                p.UpdatedDate
-            }).ToList();
+        private readonly IMediator _mediator = _mediator;
 
-            return Ok(new
-            {
-                totalCount,
-                products
-            });
+
+        [HttpGet]
+        public async Task<IActionResult> Get([FromQuery] GetAllProductQueryRequest getAllProductQueryRequest)
+        {
+            GetAllProductQueryResponse response = await _mediator.Send(getAllProductQueryRequest);
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
@@ -49,28 +40,9 @@ namespace ECommerce.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(CreateProductDto model, [FromServices] IValidator<CreateProductDto> validator)
+        public async Task<IActionResult> Post(CreateProductCommandRequest createProductCommandRequest)
         {
-            var validationResult = await validator.ValidateAsync(model);
-            
-            if (!validationResult.IsValid)
-            {
-                var modelStateDictionary = new ModelStateDictionary();
-
-                foreach (ValidationFailure failure in validationResult.Errors)
-                    modelStateDictionary.AddModelError(failure.PropertyName, failure.ErrorMessage);
-
-                return ValidationProblem(modelStateDictionary);
-            }
-
-            await _productWriteRepository.AddAsync(new()
-            {
-                Name = model.Name,
-                Stock = model.Stock,
-                Price = model.Price,
-            });
-            await _productWriteRepository.SaveAsync();
-
+            CreateProductCommandResponse response = await _mediator.Send(createProductCommandRequest);
             return StatusCode((int)HttpStatusCode.Created);
         }
 

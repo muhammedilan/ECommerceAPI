@@ -1,3 +1,4 @@
+using ECommerceAPI.Application;
 using ECommerceAPI.Application.Validators.Products;
 using ECommerceAPI.Infrastructure;
 using ECommerceAPI.Infrastructure.Services.Storage.Local;
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices();
+builder.Services.AddApplicationServices();
 
 builder.Services.AddCors(options =>
 {
@@ -17,7 +19,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateProductValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateProductCommandValidator>();
 
 builder.Services.AddStorage<LocalStorage>();
 

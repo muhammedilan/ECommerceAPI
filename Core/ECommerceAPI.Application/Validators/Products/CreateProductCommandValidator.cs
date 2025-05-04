@@ -1,11 +1,11 @@
-﻿using ECommerceAPI.Application.DTOs.Product;
+﻿using ECommerceAPI.Application.Features.Commands.CreateProduct;
 using FluentValidation;
 
 namespace ECommerceAPI.Application.Validators.Products
 {
-    public class CreateProductValidator : AbstractValidator<CreateProductDto>
+    public class CreateProductCommandValidator : AbstractValidator<CreateProductCommandRequest>
     {
-        public CreateProductValidator()
+        public CreateProductCommandValidator()
         {
             var nameErrorMsg = "Lütfen ürün adını boş geçmeyiniz";
             var nameLengthErrorMsg = "Lütfen ürün adını 5 ile 150 karakter arasında giriniz";
@@ -17,7 +17,7 @@ namespace ECommerceAPI.Application.Validators.Products
                 .NotNull().WithMessage(nameErrorMsg)
                 .MaximumLength(150).WithMessage(nameLengthErrorMsg)
                 .MinimumLength(5).WithMessage(nameLengthErrorMsg);
-                
+
             RuleFor(p => p.Stock)
                 .NotEmpty().WithMessage(stockErrorMsg)
                 .NotNull().WithMessage(stockErrorMsg)
