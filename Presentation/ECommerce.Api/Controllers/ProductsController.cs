@@ -1,5 +1,6 @@
 ﻿using ECommerceAPI.Application.DTOs.Product;
 using ECommerceAPI.Application.Repositories;
+using ECommerceAPI.Application.RequestParameters;
 using ECommerceAPI.Domain.Entities;
 using FluentValidation;
 using FluentValidation.Results;
@@ -17,13 +18,28 @@ namespace ECommerce.Api.Controllers
         private readonly IProductReadRepository _productReadRepository = _productReadRepository;
 
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get([FromQuery] Pagination pagination)
         {
-            return Ok(_productReadRepository.GetAll(false));
+            var totalCount = _productReadRepository.GetAll(false).Count();
+            var products = _productReadRepository.GetAll(false).Skip(pagination.Page * pagination.Size).Take(pagination.Size).Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Stock,
+                p.Price,
+                p.CreatedDate,
+                p.UpdatedDate
+            }).ToList();
+
+            return Ok(new
+            {
+                totalCount,
+                products
+            });
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(string id)
+        public async Task<IActionResult> GetById(string id)
         {
             return Ok(await _productReadRepository.GetByIdAsync(id, false));
         }
