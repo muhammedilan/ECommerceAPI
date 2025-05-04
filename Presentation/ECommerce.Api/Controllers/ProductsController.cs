@@ -1,6 +1,7 @@
 ﻿using ECommerceAPI.Application.DTOs.Product;
 using ECommerceAPI.Application.Repositories;
 using ECommerceAPI.Application.RequestParameters;
+using ECommerceAPI.Application.Services;
 using ECommerceAPI.Domain.Entities;
 using FluentValidation;
 using FluentValidation.Results;
@@ -12,11 +13,12 @@ namespace ECommerce.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController(IProductWriteRepository _productWriteRepository, IProductReadRepository _productReadRepository, IWebHostEnvironment _webHostEnvironment) : ControllerBase
+    public class ProductsController(IProductWriteRepository _productWriteRepository, IProductReadRepository _productReadRepository, IFileService _fileService, IWebHostEnvironment _webHostEnvironment) : ControllerBase
     {
         private readonly IProductWriteRepository _productWriteRepository = _productWriteRepository;
         private readonly IProductReadRepository _productReadRepository = _productReadRepository;
         private readonly IWebHostEnvironment _webHostEnvironment = _webHostEnvironment;
+        private readonly IFileService _fileService = _fileService;
 
         [HttpGet]
         public IActionResult Get([FromQuery] Pagination pagination)
@@ -97,18 +99,7 @@ namespace ECommerce.Api.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Upload()
         {
-            var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "resource/product-images");
-
-            if (!Directory.Exists(uploadPath))
-                Directory.CreateDirectory(uploadPath);
-            
-            foreach (var file in Request.Form.Files)
-            {
-                var fullPath = Path.Combine(uploadPath, Path.GetFileName(file.FileName));
-                using FileStream fileStream = new(fullPath, FileMode.Create);
-                await file.CopyToAsync(fileStream);
-            }
-
+            await _fileService.UploadAsync("resource/product-images", Request.Form.Files);
             return Ok();
         }
     };
