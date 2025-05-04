@@ -1,9 +1,8 @@
-﻿using ECommerceAPI.Application.DTOs.Product;
+﻿using ECommerceAPI.Application.Abstractions.Storage;
+using ECommerceAPI.Application.DTOs.Product;
 using ECommerceAPI.Application.Repositories;
 using ECommerceAPI.Application.RequestParameters;
-using ECommerceAPI.Application.Services;
 using ECommerceAPI.Domain.Entities;
-using ECommerceAPI.Persistence.Repositories;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
@@ -14,12 +13,12 @@ namespace ECommerce.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController(IProductWriteRepository _productWriteRepository, IProductReadRepository _productReadRepository, IFileService _fileService, IProductImageFileWriteRepository _productImageFileWriteRepository) : ControllerBase
+    public class ProductsController(IProductWriteRepository _productWriteRepository, IProductReadRepository _productReadRepository, IStorageService _storageService, IProductImageFileWriteRepository _productImageFileWriteRepository) : ControllerBase
     {
         private readonly IProductWriteRepository _productWriteRepository = _productWriteRepository;
         private readonly IProductReadRepository _productReadRepository = _productReadRepository;
-        private readonly IFileService _fileService = _fileService;
         private readonly IProductImageFileWriteRepository _productImageFileWriteRepository = _productImageFileWriteRepository;
+        private readonly IStorageService _storageService = _storageService;
 
         [HttpGet]
         public IActionResult Get([FromQuery] Pagination pagination)
@@ -100,12 +99,13 @@ namespace ECommerce.Api.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Upload()
         {
-            var datas = await _fileService.UploadAsync("resource/product-images", Request.Form.Files);
+            var datas = await _storageService.UploadAsync("resource/files", Request.Form.Files);
 
             List<ProductImageFile> productImageFiles = datas.Select(d => new ProductImageFile()
             {
                 FileName = d.fileName,
-                Path = d.path
+                Path = d.pathOrContainerName,
+                Storage = _storageService.StorageName
             }).ToList();
 
             await _productImageFileWriteRepository.AddRangeAsync(productImageFiles);
