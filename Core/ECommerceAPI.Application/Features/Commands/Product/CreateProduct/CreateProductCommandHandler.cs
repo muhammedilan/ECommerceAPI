@@ -2,7 +2,7 @@
 using FluentValidation;
 using MediatR;
 
-namespace ECommerceAPI.Application.Features.Commands.CreateProduct
+namespace ECommerceAPI.Application.Features.Commands.Product.CreateProduct
 { 
     public class CreateProductCommandHandler(IProductWriteRepository _productWriteRepository, IValidator<CreateProductCommandRequest> _validator) : IRequestHandler<CreateProductCommandRequest, CreateProductCommandResponse>
     {
