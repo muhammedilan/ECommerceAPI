@@ -15,4 +15,8 @@
     <Folder Include="Services\Storage\Azure\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
+  </ItemGroup>
+
 </Project>
