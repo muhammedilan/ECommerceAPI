@@ -1,35 +1,28 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Identity;
+﻿using ECommerceAPI.Application.Abstractions.Services;
+using ECommerceAPI.Application.DTOs.User;
+using MediatR;
 
 namespace ECommerceAPI.Application.Features.Commands.AppUser.CreateUser
 {
-    public class CreateUserCommandHandler(UserManager<Domain.Entities.Identity.AppUser> _userManager) : IRequestHandler<CreateUserCommandRequest, CreateUserCommandResponse>
+    public class CreateUserCommandHandler(IUserService _userService) : IRequestHandler<CreateUserCommandRequest, CreateUserCommandResponse>
     {
-        private readonly UserManager<Domain.Entities.Identity.AppUser> _userManager = _userManager;
+        private readonly IUserService _userService = _userService;
 
         public async Task<CreateUserCommandResponse> Handle(CreateUserCommandRequest request, CancellationToken cancellationToken)
         {
-            IdentityResult result = await _userManager.CreateAsync(new()
+            CreateUserResponse response = await _userService.CreateAsync(new()
             {
-                Id = Guid.NewGuid().ToString(),
-                UserName = request.UserName,
                 Email = request.Email,
                 NameSurname = request.NameSurname,
-            }, request.Password);
+                Password = request.Password,
+                UserName = request.UserName,
+            });
 
-            CreateUserCommandResponse response = new() { Succeeded = result.Succeeded };
-
-            if (result.Succeeded)
+            return new()
             {
-                response.Message = "Kullanıcı başarıyla oluşturulmuştur";
-            }
-            else
-            {
-                foreach (var error in result.Errors)
-                    response.Message += $"{error.Code} - {error.Description}";
-            }
-
-            return response;
+                Message = response.Message,
+                Succeeded = response.Succeeded,
+            };
         }
     }
 }
