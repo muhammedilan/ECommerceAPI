@@ -7,9 +7,20 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, loggerConfig) =>
+{
+    loggerConfig.WriteTo.Console();
+    loggerConfig.WriteTo.File("logs/logs.txt");
+    loggerConfig.WriteTo.Seq(builder.Configuration["Seq:ServerURL"]);
+
+    loggerConfig.Enrich.FromLogContext();
+    loggerConfig.MinimumLevel.Information();
+});
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -53,6 +64,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+app.UseSerilogRequestLogging();
 app.UseCors();
 app.UseHttpsRedirection();
 
