@@ -24,10 +24,6 @@ namespace ECommerceAPI.Persistence
                 options.Password.RequireUppercase = false;
             }).AddEntityFrameworkStores<ECommerceAPIDbContext>();
 
-            services.AddScoped<ICustomerReadRepository, CustomerReadRepository>();
-            services.AddScoped<ICustomerWriteRepository, CustomerWriteRepository>();
-            services.AddScoped<IOrderReadRepository, OrderReadRepository>();
-            services.AddScoped<IOrderWriteRepository, OrderWriteRepository>();
             services.AddScoped<IProductReadRepository, ProductReadRepository>();
             services.AddScoped<IProductWriteRepository, ProductWriteRepository>();
             services.AddScoped<IFileReadRepository, FileReadRepository>();

@@ -19,7 +19,7 @@ namespace ECommerceAPI.Persistence.Services
             var user = await _userManager.FindByNameAsync(usernameOrEmail) ?? await _userManager.FindByEmailAsync(usernameOrEmail);
 
             if (user is null)
-                throw new NotFoundUserException();
+                throw new AuthenticationErrorException();
 
             SignInResult result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
 

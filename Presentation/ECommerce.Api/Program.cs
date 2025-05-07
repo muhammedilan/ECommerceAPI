@@ -1,4 +1,5 @@
 using ECommerceAPI.Api.Handlers;
+using ECommerceAPI.Api.SchemeTransformer;
 using ECommerceAPI.Application;
 using ECommerceAPI.Application.Validators.Products;
 using ECommerceAPI.Infrastructure;
@@ -25,7 +26,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 });
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi("v1", options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
 
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices();
@@ -37,7 +38,7 @@ builder.Services.AddStorage<LocalStorage>();
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder => builder.WithOrigins("http://localhost:3000", "https://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials());
+    options.AddDefaultPolicy(builder => builder.WithOrigins("http://localhost:7000", "https://localhost:7000").AllowAnyHeader().AllowAnyMethod().AllowCredentials());
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -65,7 +66,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "ECommerce API";
+    });
 }
 
 app.UseExceptionHandler();

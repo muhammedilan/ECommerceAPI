@@ -14,13 +14,17 @@ namespace ECommerceAPI.Application.Features.Commands.ProductImageFile.RemoveProd
             Domain.Entities.Product? product = await _productReadRepository.Table
                 .Include(p => p.ProductImageFiles)
                 .FirstOrDefaultAsync(p => p.Id == Guid.Parse(request.ProductId));
+            
+            if (product is null)
+                return null;
 
             Domain.Entities.ProductImageFile? productImageFile = product.ProductImageFiles
                 .FirstOrDefault(pi => pi.Id == Guid.Parse(request.ImageId));
+            
+            if (productImageFile is null)
+                return null;
 
-            if (productImageFile is not null)
-                product.ProductImageFiles.Remove(productImageFile);
-
+            product.ProductImageFiles.Remove(productImageFile);
             await _productWriteRepository.SaveAsync();
 
             return new();

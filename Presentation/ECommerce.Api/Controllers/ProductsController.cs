@@ -16,48 +16,57 @@ namespace ECommerceAPI.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ProductsController(IMediator _mediator) : ControllerBase
     {
         private readonly IMediator _mediator = _mediator;
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] GetAllProductQueryRequest getAllProductQueryRequest)
+        [EndpointDescription("Sayfa ve ürün sayısına göre ürünleri getir")]
+        public async Task<ActionResult<GetAllProductQueryResponse>> GetAllProducts([FromQuery] GetAllProductQueryRequest getAllProductQueryRequest)
         {
             GetAllProductQueryResponse response = await _mediator.Send(getAllProductQueryRequest);
             return Ok(response);
         }
 
         [HttpGet("{Id}")]
-        public async Task<IActionResult> GetById([FromRoute] GetByIdProductQueryRequest getByIdProductQueryRequest)
+        [EndpointDescription("Product Id'e göre ürün getir")]
+        public async Task<ActionResult<GetByIdProductQueryResponse>> GetByIdProduct([FromRoute] GetByIdProductQueryRequest getByIdProductQueryRequest)
         {
             GetByIdProductQueryResponse response = await _mediator.Send(getByIdProductQueryRequest);
             return Ok(response);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] CreateProductCommandRequest createProductCommandRequest)
+        [EndpointDescription("Ürün oluştur")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<CreateProductCommandResponse>> CreateProduct([FromBody] CreateProductCommandRequest createProductCommandRequest)
         {
             CreateProductCommandResponse response = await _mediator.Send(createProductCommandRequest);
             return StatusCode((int)HttpStatusCode.Created);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put([FromBody] UpdateProductCommandRequest updateProductCommandRequest)
+        [EndpointDescription("Product Id'e göre ürün güncelle")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<UpdateProductCommandResponse>> UpdateProduct([FromBody] UpdateProductCommandRequest updateProductCommandRequest)
         {
             UpdateProductCommandResponse response = await _mediator.Send(updateProductCommandRequest);
             return Ok();
         }
 
         [HttpDelete("{Id}")]
-        public async Task<IActionResult> Delete([FromRoute] RemoveProductCommandRequest removeProductCommandRequest)
+        [EndpointDescription("Product Id'e göre ürün sil")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<RemoveProductCommandResponse>> DeleteProduct([FromRoute] RemoveProductCommandRequest removeProductCommandRequest)
         {
             RemoveProductCommandResponse response = await _mediator.Send(removeProductCommandRequest);
             return Ok();
         }
 
-        [HttpPost("[action]")]
-        public async Task<IActionResult> Upload([FromQuery] string id)
+        [HttpPost("images/upload")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [EndpointDescription("Product Id'e göre ürün resimleri yükle")]
+        public async Task<ActionResult<UploadProductImageCommandResponse>> UploadProduct([FromQuery] string id)
         {
             var uploadProductImageCommandRequest = new UploadProductImageCommandRequest()
             {
@@ -69,15 +78,18 @@ namespace ECommerceAPI.Api.Controllers
             return Ok();
         }
 
-        [HttpGet("[action]/{Id}")]
-        public async Task<IActionResult> GetProductImages([FromRoute] GetProductImagesQueryRequest getProductImagesQueryRequest)
+        [HttpGet("images/{Id}")]
+        [EndpointDescription("Product Id'e göre ürün resimlerini getir")]
+        public async Task<ActionResult<GetProductsImageQueryResponse>> GetProductImages([FromRoute] GetProductImagesQueryRequest getProductImagesQueryRequest)
         {
             List<GetProductsImageQueryResponse> response = await _mediator.Send(getProductImagesQueryRequest);
             return Ok(response);
         }
 
-        [HttpDelete("[action]/{productId}/{imageId}")]
-        public async Task<IActionResult> DeleteProductImage([FromRoute] string imageId, string productId)
+        [HttpDelete("{productId}/images/{imageId}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [EndpointDescription("Product Id ve Image Id'e göre ürün resmini sil")]
+        public async Task<ActionResult<RemoveProductImageCommandResponse>> DeleteProductImage([FromRoute] string imageId, string productId)
         {
             var removeProductImageCommandRequest = new RemoveProductImageCommandRequest()
             {
@@ -86,7 +98,11 @@ namespace ECommerceAPI.Api.Controllers
             };
 
             RemoveProductImageCommandResponse response = await _mediator.Send(removeProductImageCommandRequest);
-            return Ok();
+
+            if (response is null)
+                return BadRequest();
+
+            return Ok(response);
         }
     };
 }

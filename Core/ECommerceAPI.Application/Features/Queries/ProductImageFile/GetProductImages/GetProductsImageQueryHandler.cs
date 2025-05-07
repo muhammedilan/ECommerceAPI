@@ -14,11 +14,11 @@ namespace ECommerceAPI.Application.Features.Queries.ProductImageFile.GetProductI
                 .Include(p => p.ProductImageFiles)
                 .FirstOrDefaultAsync(p => p.Id == Guid.Parse(request.Id));
 
-            return product.ProductImageFiles.Select(p => new GetProductsImageQueryResponse()
+            return product.ProductImageFiles.Select(pi => new GetProductsImageQueryResponse()
             {
-                Path = p.Path,
-                FileName = p.FileName,
-                ProductId = p.Id
+                ImageId = pi.Id,
+                Path = pi.Path,
+                FileName = pi.FileName
             }).ToList();
         }
     }

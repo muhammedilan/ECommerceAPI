@@ -14,7 +14,8 @@ namespace ECommerceAPI.Api.Handlers
             var problemDetails = new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,
-                Title = "Server error"
+                Title = "Server error",
+                Detail = exception.Message
             };
 
             httpContext.Response.StatusCode = problemDetails.Status.Value;
